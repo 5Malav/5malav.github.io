@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Malav Joshi — ML Infrastructure &amp; Reliability</title>
+<meta name="description" content="Operations engineer turned ML infrastructure builder. I build ML systems that don't die at 3 a.m. — production pipelines with CI, versioning, containers and monitoring.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF7F0;
+  --paper-2:#F2EDE0;
+  --ink:#1B2434;
+  --slate:#4C566B;
+  --line:#E2DBC9;
+  --night:#161F30;
+  --night-2:#1F2A40;
+  --signal:#168A52;
+  --signal-bright:#27B873;
+  --signal-deep:#0E6B3E;
+  --amber:#C07A2E;
+  --amber-deep:#96601F;
+  --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::selection{background:var(--signal);color:var(--paper)}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+.mono{font-family:var(--mono)}
+
+/* ---------- status dots (encode real project state) ---------- */
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+.dot.g{background:var(--signal)}
+.dot.a{background:var(--amber)}
+.dot.o{background:transparent;border:1.5px solid var(--slate)}
+.dot.live{animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(39,184,115,.45)}55%{box-shadow:0 0 0 7px rgba(39,184,115,0)}}
+
+/* ---------- nav ---------- */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  background:rgba(250,247,240,.82);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:.12em;text-decoration:none}
+.nav-links{display:flex;gap:26px;align-items:center}
+.nav-links a{font-family:var(--mono);font-size:12.5px;letter-spacing:.06em;text-decoration:none;color:var(--slate);transition:color .2s}
+.nav-links a:hover{color:var(--signal-deep)}
+.nav-mail{font-family:var(--mono);font-size:12.5px;text-decoration:none;border:1px solid var(--ink);border-radius:999px;padding:7px 16px;transition:background .2s,color .2s}
+.nav-mail:hover{background:var(--ink);color:var(--paper)}
+
+/* ---------- hero ---------- */
+header{
+  position:relative;min-height:100vh;display:flex;align-items:center;
+  padding:120px 0 60px;overflow:hidden;
+  background-image:radial-gradient(var(--line) 1px,transparent 1px);
+  background-size:26px 26px;
+}
+#hero3d{position:absolute;inset:0;z-index:1;pointer-events:none}
+#hero3d canvas{display:block}
+.hero-fade{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:linear-gradient(95deg,var(--paper) 30%,rgba(250,247,240,.55) 55%,rgba(250,247,240,0) 78%);
+}
+.hero-fade::after{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;
+  background:linear-gradient(180deg,rgba(250,247,240,0),var(--paper))}
+.hero-in{position:relative;z-index:3;width:100%}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:48px;align-items:center}
+
+.pill{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--ink);
+  border:1px solid var(--line);background:rgba(255,255,255,.55);
+  border-radius:999px;padding:8px 16px;margin-bottom:30px;
+}
+h1{
+  font-family:var(--serif);font-weight:600;
+  font-size:clamp(2.5rem,5.6vw,4.35rem);
+  line-height:1.06;letter-spacing:-.022em;
+  margin-bottom:26px;text-wrap:balance;
+}
+.ekg-wrap{display:inline-block;position:relative;white-space:nowrap}
+.ekg{position:absolute;left:0;right:0;bottom:-.18em;width:100%;height:.42em;overflow:visible}
+.ekg path{fill:none;stroke:var(--signal);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:620;stroke-dashoffset:620;animation:draw 1.5s cubic-bezier(.6,0,.3,1) .5s forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.hero-sub{font-size:18.5px;color:var(--slate);max-width:34em;margin-bottom:34px}
+.hero-sub strong{color:var(--ink);font-weight:600}
+.cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:44px}
+.btn{
+  font-family:var(--mono);font-size:13.5px;letter-spacing:.03em;text-decoration:none;
+  border-radius:999px;padding:13px 26px;transition:all .2s;display:inline-flex;align-items:center;gap:8px;
+}
+.btn.solid{background:var(--ink);color:var(--paper);border:1px solid var(--ink)}
+.btn.solid:hover{background:var(--signal-deep);border-color:var(--signal-deep);transform:translateY(-1px)}
+.btn.ghost{border:1px solid var(--ink);color:var(--ink);background:transparent}
+.btn.ghost:hover{background:var(--ink);color:var(--paper);transform:translateY(-1px)}
+
+/* ---------- terminal ---------- */
+.term{
+  background:var(--night);border-radius:14px;border:1px solid var(--night-2);
+  box-shadow:0 24px 60px -28px rgba(22,31,48,.45);
+  font-family:var(--mono);font-size:13px;line-height:1.85;
+  max-width:560px;overflow:hidden;
+}
+.term-bar{display:flex;gap:7px;align-items:center;padding:13px 18px;border-bottom:1px solid var(--night-2)}
+.term-bar i{width:10px;height:10px;border-radius:50%;background:var(--night-2);display:block}
+.term-bar span{font-size:11px;color:#5C6B85;letter-spacing:.08em;margin-left:8px}
+.term-body{padding:18px 22px;color:#C9D3E6}
+.t-p{color:#7C8BA8}
+.t-g{color:var(--signal-bright)}
+.t-a{color:#E0A35C}
+.t-c{color:#5C6B85}
+.cursor{display:inline-block;width:8px;height:15px;background:var(--signal-bright);vertical-align:-2px;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- stat strip ---------- */
+.stats{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.4)}
+.stats-in{display:grid;grid-template-columns:repeat(4,1fr)}
+.stat{padding:34px 26px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:none}
+.stat b{display:block;font-family:var(--serif);font-weight:600;font-size:clamp(1.7rem,2.6vw,2.3rem);letter-spacing:-.02em;line-height:1.1;margin-bottom:6px}
+.stat span{font-family:var(--mono);font-size:11.5px;letter-spacing:.07em;color:var(--slate);text-transform:uppercase}
+
+/* ---------- sections ---------- */
+.sec{padding:110px 0}
+.eyebrow{
+  display:flex;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--slate);margin-bottom:18px;
+}
+.eyebrow::after{content:"";height:1px;flex:1;background:var(--line)}
+h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.9rem,3.6vw,2.7rem);letter-spacing:-.02em;line-height:1.15;margin-bottom:18px;text-wrap:balance}
+.sec-lede{color:var(--slate);font-size:18px;max-width:38em;margin-bottom:54px}
+.sec-lede em{font-style:italic;font-family:var(--serif);color:var(--ink)}
+
+/* ---------- project cards ---------- */
+.card{
+  border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.55);
+  padding:38px;transition:border-color .25s,transform .25s,box-shadow .25s;
+  position:relative;display:block;text-decoration:none;
+}
+.card:hover{border-color:var(--signal);transform:translateY(-3px);box-shadow:0 22px 50px -30px rgba(22,31,48,.35)}
+.card-top{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.status{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+.status.g{color:var(--signal-deep)}
+.status.a{color:var(--amber-deep)}
+.status.o{color:var(--slate)}
+.card h3{font-family:var(--serif);font-weight:600;font-size:1.55rem;letter-spacing:-.015em;margin-bottom:12px}
+.card p{color:var(--slate);font-size:16px;margin-bottom:20px}
+.card .go{font-family:var(--mono);font-size:12.5px;color:var(--ink);letter-spacing:.04em}
+.card:hover .go{color:var(--signal-deep)}
+.flagship{margin-bottom:26px}
+.flag-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:start}
+.phase-list{list-style:none;border-left:1px solid var(--line);padding-left:24px;display:flex;flex-direction:column;gap:11px}
+.phase-list li{display:flex;align-items:baseline;gap:11px;font-family:var(--mono);font-size:13px;color:var(--ink)}
+.phase-list li .dot{transform:translateY(-1px)}
+.phase-list li.next{color:var(--amber-deep)}
+.phase-h{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate);margin:6px 0 2px}
+.cards-2{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-bottom:26px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.tag{font-family:var(--mono);font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--slate);background:rgba(255,255,255,.5)}
+.bench{
+  border:1px dashed var(--line);border-radius:18px;padding:30px 38px;
+  display:flex;gap:34px;align-items:flex-start;flex-wrap:wrap;background:transparent;
+}
+.bench-h{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate);min-width:120px;padding-top:4px}
+.bench-items{display:flex;flex-direction:column;gap:12px;flex:1;min-width:260px}
+.bench-items div{display:flex;gap:11px;align-items:baseline;font-size:15.5px;color:var(--slate)}
+.bench-items b{color:var(--ink);font-weight:600}
+
+/* ---------- path (then → now) ---------- */
+.path-claim{font-family:var(--serif);font-style:italic;font-size:clamp(1.25rem,2.2vw,1.6rem);color:var(--ink);max-width:30em;margin-bottom:50px;line-height:1.4}
+.map{border-top:1px solid var(--line)}
+.map-row{
+  display:grid;grid-template-columns:1fr 56px 1fr;gap:18px;align-items:center;
+  padding:26px 6px;border-bottom:1px solid var(--line);
+}
+.map-row .then{color:var(--slate);font-size:16px}
+.map-row .arrow{font-family:var(--mono);color:var(--signal);text-align:center;font-size:18px}
+.map-row .now{font-size:16.5px;font-weight:600}
+.map-head{display:grid;grid-template-columns:1fr 56px 1fr;gap:18px;padding:0 6px 14px}
+.map-head span{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate)}
+.map-head span:last-child{color:var(--signal-deep)}
+
+/* ---------- story ---------- */
+.story-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:60px;align-items:start}
+.story-grid .copy p{margin-bottom:22px;color:var(--ink);font-size:17.5px}
+.story-grid .copy p:last-child{margin-bottom:0}
+.story-grid .copy .first-line::first-letter{
+  font-family:var(--serif);font-weight:600;font-size:3.3em;float:left;
+  line-height:.82;padding-right:10px;padding-top:4px;color:var(--signal-deep);
+}
+.aside{position:sticky;top:96px}
+.aside .term{max-width:none}
+
+/* ---------- experience ---------- */
+.xp{border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.55);padding:42px;margin-bottom:26px}
+.xp-head{display:flex;justify-content:space-between;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:8px}
+.xp-head h3{font-family:var(--serif);font-weight:600;font-size:1.5rem;letter-spacing:-.015em}
+.xp-meta{font-family:var(--mono);font-size:12.5px;color:var(--slate);letter-spacing:.04em}
+.xp-role{font-family:var(--mono);font-size:13px;color:var(--signal-deep);margin-bottom:22px}
+.xp ul{list-style:none;display:flex;flex-direction:column;gap:13px;margin-bottom:26px}
+.xp ul li{padding-left:22px;position:relative;color:var(--slate);font-size:16px}
+.xp ul li::before{content:"";position:absolute;left:0;top:.55em;width:7px;height:7px;border-radius:50%;background:var(--signal)}
+.xp ul li b{color:var(--ink);font-weight:600}
+.awards{display:flex;gap:10px;flex-wrap:wrap}
+.award{font-family:var(--mono);font-size:11.5px;letter-spacing:.05em;border:1px solid var(--amber);color:var(--amber-deep);border-radius:999px;padding:5px 14px}
+.edu{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.edu div{border:1px solid var(--line);border-radius:14px;padding:24px;background:rgba(255,255,255,.4)}
+.edu b{display:block;font-family:var(--serif);font-weight:600;font-size:1.05rem;margin-bottom:6px;letter-spacing:-.01em}
+.edu span{font-family:var(--mono);font-size:12px;color:var(--slate)}
+
+/* ---------- stack ---------- */
+.legend{display:flex;gap:26px;flex-wrap:wrap;margin-bottom:40px}
+.legend span{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--slate);letter-spacing:.04em}
+.skill-group{margin-bottom:34px}
+.skill-group h4{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--slate);margin-bottom:16px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;border:1px solid var(--line);background:rgba(255,255,255,.55);border-radius:999px;padding:8px 16px;color:var(--ink)}
+.chip .dot{width:7px;height:7px}
+.chip.building{border-color:rgba(192,122,46,.45)}
+.chip.planned{border-style:dashed;color:var(--slate)}
+
+/* ---------- contact ---------- */
+.contact{background:var(--night);color:#E9EDF6;border-radius:26px;padding:90px 60px;text-align:center;position:relative;overflow:hidden}
+.contact::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(124,139,168,.18) 1px,transparent 1px);background-size:26px 26px}
+.contact>*{position:relative}
+.contact .eyebrow{justify-content:center;color:#7C8BA8}
+.contact .eyebrow::after{display:none}
+.contact h2{color:#F4F1E8;margin-bottom:18px}
+.contact h2 em{font-style:italic;color:var(--signal-bright)}
+.contact p{color:#9FACC6;max-width:32em;margin:0 auto 40px}
+.contact .btn.solid{background:var(--signal);border-color:var(--signal);color:#fff}
+.contact .btn.solid:hover{background:var(--signal-bright);border-color:var(--signal-bright)}
+.contact .btn.ghost{border-color:#3A4763;color:#C9D3E6}
+.contact .btn.ghost:hover{background:#27324B;color:#fff}
+.contact-meta{margin-top:44px;font-family:var(--mono);font-size:12px;color:#7C8BA8;letter-spacing:.06em}
+
+footer{padding:40px 0 50px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:12px;color:var(--slate)}
+footer a{color:var(--slate);text-decoration:none;border-bottom:1px solid var(--line)}
+footer a:hover{color:var(--signal-deep)}
+
+/* ---------- reveal ---------- */
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+
+a:focus-visible,button:focus-visible{outline:2.5px solid var(--signal);outline-offset:3px;border-radius:6px}
+
+/* ---------- responsive ---------- */
+@media (max-width:960px){
+  .hero-grid{grid-template-columns:1fr}
+  .hero-fade{background:linear-gradient(180deg,var(--paper) 8%,rgba(250,247,240,.72) 55%,rgba(250,247,240,.55) 100%)}
+  .flag-grid{grid-template-columns:1fr;gap:30px}
+  .story-grid{grid-template-columns:1fr;gap:44px}
+  .aside{position:static}
+  .edu{grid-template-columns:1fr}
+  .stats-in{grid-template-columns:1fr 1fr}
+  .stat{border-left:none;border-top:1px solid var(--line)}
+  .stat:nth-child(-n+2){border-top:none}
+  .stat:nth-child(even){border-left:1px solid var(--line)}
+}
+@media (max-width:720px){
+  .nav-links{display:none}
+  .cards-2{grid-template-columns:1fr}
+  .sec{padding:80px 0}
+  .map-row{grid-template-columns:1fr;gap:8px;padding:22px 2px}
+  .map-row .arrow{text-align:left}
+  .map-head{display:none}
+  .contact{padding:64px 26px}
+  .xp{padding:30px 24px}
+  .card{padding:28px 24px}
+  .bench{padding:24px}
+  header{padding-top:104px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><span class="dot g live"></span>MALAV&nbsp;JOSHI</a>
+    <div class="nav-links">
+      <a href="#work">Work</a>
+      <a href="#path">Path</a>
+      <a href="#story">Story</a>
+      <a href="#stack">Stack</a>
+      <a class="nav-mail" href="mailto:malavmjoshi@gmail.com">Email me</a>
+    </div>
+  </div>
+</nav>
+
+<header id="top">
+  <div id="hero3d" aria-hidden="true"></div>
+  <div class="hero-fade" aria-hidden="true"></div>
+  <div class="wrap hero-in">
+    <div class="hero-grid">
+      <div>
+        <div class="pill"><span class="dot g live"></span>OPEN TO ML INFRA · MLOPS · PLATFORM ROLES</div>
+        <h1>I build ML systems that <span class="ekg-wrap">don&rsquo;t&nbsp;die<svg class="ekg" viewBox="0 0 240 34" preserveAspectRatio="none" aria-hidden="true"><path d="M2 24 L70 24 L86 24 L96 6 L108 32 L118 24 L238 24"/></svg></span> at&nbsp;3&nbsp;a.m.</h1>
+        <p class="hero-sub">Operations engineer turned ML infrastructure builder. <strong>Three years keeping production automation honest at TD Insurance</strong> — now shipping production-grade ML pipelines in public: versioned, tested, containerized, monitored.</p>
+        <div class="cta-row">
+          <a class="btn solid" href="https://github.com/5Malav" target="_blank" rel="noopener">View GitHub ↗</a>
+          <a class="btn ghost" href="https://linkedin.com/in/malavjoshi5" target="_blank" rel="noopener">LinkedIn ↗</a>
+        </div>
+        <div class="term" role="img" aria-label="Terminal showing the flagship repo's release tags and passing checks">
+          <div class="term-bar"><i></i><i></i><i></i><span>churn-mlops — zsh</span></div>
+          <div class="term-body">
+            <div><span class="t-p">$</span> git tag --sort=v:refname</div>
+            <div class="t-g">v1.0&nbsp;&nbsp;v1.1&nbsp;&nbsp;v1.2&nbsp;&nbsp;v1.3&nbsp;&nbsp;v1.4&nbsp;&nbsp;v1.5</div>
+            <div><span class="t-p">$</span> ruff check . &amp;&amp; black --check . &amp;&amp; pytest</div>
+            <div class="t-g">all checks passed — runs on every push (GitHub Actions)</div>
+            <div><span class="t-c"># next: gcs remote → terraform → cloud run</span> <span class="cursor"></span></div>
+          </div>
+        </div>
+      </div>
+      <div><!-- 3D canvas lives behind via #hero3d --></div>
+    </div>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="wrap stats-in">
+    <div class="stat reveal"><b>$60K</b><span>annual savings shipped</span></div>
+    <div class="stat reveal"><b>45→90%</b><span>automation completion rate</span></div>
+    <div class="stat reveal"><b>75%</b><span>manual effort eliminated</span></div>
+    <div class="stat reveal"><b>v1.5</b><span>six tagged releases &amp; counting</span></div>
+  </div>
+</div>
+
+<section class="sec" id="work">
+  <div class="wrap">
+    <div class="eyebrow reveal"><span class="dot g"></span>WORK — SHIPPED &amp; VERSIONED</div>
+    <h2 class="reveal">Built like products, not notebooks.</h2>
+    <p class="sec-lede reveal">Every dot below is honest: <em>green is shipped, amber is in progress, hollow is on the bench.</em> A model that can&rsquo;t survive deployment is a demo — so the engineering around the model is the work.</p>
+
+    <a class="card flagship reveal" href="https://github.com/5Malav/churn-mlops" target="_blank" rel="noopener">
+      <div class="flag-grid">
+        <div>
+          <div class="card-top">
+            <span class="status g"><span class="dot g live"></span>Active · v1.5</span>
+            <span class="status o">Flagship</span>
+          </div>
+          <h3>churn-mlops — a production-grade ML pipeline</h3>
+          <p>An end-to-end churn classifier treated like software, not a notebook: data contracts validate every batch, experiments are tracked, data is versioned, training and serving run in containers, and CI gates every push. Six tagged releases so far — each one documented, reproducible, and rollback-able.</p>
+          <div class="tags">
+            <span class="tag">Python</span><span class="tag">scikit-learn</span><span class="tag">Pandera</span><span class="tag">MLflow</span><span class="tag">DVC</span><span class="tag">Docker</span><span class="tag">GitHub Actions</span>
+          </div>
+          <span class="go">github.com/5Malav/churn-mlops →</span>
+        </div>
+        <div>
+          <ul class="phase-list">
+            <li class="phase-h">Shipped</li>
+            <li><span class="dot g"></span>Pandera schemas — data contracts</li>
+            <li><span class="dot g"></span>MLflow experiment tracking</li>
+            <li><span class="dot g"></span>DVC data &amp; model versioning</li>
+            <li><span class="dot g"></span>Dockerized training &amp; serving</li>
+            <li><span class="dot g"></span>CI: pytest · ruff · black on every push</li>
+            <li class="phase-h">In progress</li>
+            <li class="next"><span class="dot a"></span>GCS remote storage</li>
+            <li class="next"><span class="dot a"></span>Terraform → Cloud Run deploy</li>
+            <li class="next"><span class="dot a"></span>Evidently + Prometheus + Grafana</li>
+          </ul>
+        </div>
+      </div>
+    </a>
+
+    <div class="cards-2">
+      <a class="card reveal" href="https://github.com/5Malav/Local-RAG" target="_blank" rel="noopener">
+        <div class="card-top"><span class="status g"><span class="dot g"></span>Shipped</span></div>
+        <h3>Local-RAG — retrieval that never phones home</h3>
+        <p>A fully local RAG system: PDF, DOCX and TXT ingestion → chunking → sentence-transformer embeddings → FAISS retrieval → Mistral 7B via Ollama, wrapped in a Gradio UI. Zero cloud calls, full data privacy — built for documents that can&rsquo;t leave the machine.</p>
+        <div class="tags"><span class="tag">FAISS</span><span class="tag">Mistral 7B</span><span class="tag">Ollama</span><span class="tag">Sentence Transformers</span><span class="tag">Gradio</span></div>
+        <span class="go">github.com/5Malav/Local-RAG →</span>
+      </a>
+      <a class="card reveal" href="https://github.com/5Malav/Enterprise-SQL-Analytics-Project" target="_blank" rel="noopener">
+        <div class="card-top"><span class="status g"><span class="dot g"></span>Shipped</span></div>
+        <h3>Relational analytics, done properly</h3>
+        <p>Two normalized schemas designed from scratch and 88 production-style queries across them — window functions, recursive CTEs, cohort analysis, revenue trends, query optimization. The boring fundamentals that every reliable data system stands on.</p>
+        <div class="tags"><span class="tag">PostgreSQL</span><span class="tag">Schema design</span><span class="tag">Window functions</span><span class="tag">Recursive CTEs</span><span class="tag">Indexing</span></div>
+        <span class="go">github.com/5Malav/Enterprise-SQL-Analytics-Project →</span>
+      </a>
+    </div>
+
+    <div class="bench reveal">
+      <div class="bench-h">On the bench</div>
+      <div class="bench-items">
+        <div><span class="dot a"></span><span><b>LLM Reliability Platform</b> — tracing, evals and guarded fine-tunes for RAG in production (Langfuse, RAGAS, QLoRA on Llama 3.2).</span></div>
+        <div><span class="dot o"></span><span><b>SafeRoll</b> — a planned open-source tool for atomic, one-command model rollbacks. Because every deploy needs an undo.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="path" style="background:var(--paper-2)">
+  <div class="wrap">
+    <div class="eyebrow reveal"><span class="dot g"></span>PATH — OPS → INFRA</div>
+    <h2 class="reveal">Insurance operations was reliability engineering wearing a different badge.</h2>
+    <p class="path-claim reveal">For three years I was the person developers called before shipping an automation, and the person operations called when it broke. The vocabulary changes; the job doesn&rsquo;t.</p>
+    <div class="map reveal">
+      <div class="map-head"><span>What I did at TD</span><span></span><span>What it&rsquo;s called in ML infra</span></div>
+      <div class="map-row"><div class="then">Owned SLA compliance across underwriting operations</div><div class="arrow">→</div><div class="now">SLOs and error budgets</div></div>
+      <div class="map-row"><div class="then">Ran UAT and post-deployment validation on every Blue Prism release</div><div class="arrow">→</div><div class="now">CI gates, smoke tests, tagged releases</div></div>
+      <div class="map-row"><div class="then">Monitored bots in production, triaged failures, root-caused errors</div><div class="arrow">→</div><div class="now">Observability, incident response, runbooks</div></div>
+      <div class="map-row"><div class="then">Translated messy business requirements into specs developers could ship</div><div class="arrow">→</div><div class="now">Designing systems humans can actually operate</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="story">
+  <div class="wrap">
+    <div class="eyebrow reveal"><span class="dot g"></span>STORY</div>
+    <h2 class="reveal">Statistics degree. Operations floor. Infrastructure obsession.</h2>
+    <div class="story-grid" style="margin-top:44px">
+      <div class="copy">
+        <p class="reveal first-line">Trained as a statistician — a B.Sc. and two Master&rsquo;s in data — I landed not in a research lab but on the operations floor of TD Insurance in Canada. Within six months I went from contract mail clerk to operations officer; by the end I was acting team lead, and the bridge between underwriting and the automation engineers.</p>
+        <p class="reveal">Somewhere between specifying the error-automation system that took completion from 45% to 90% and getting paged when a bot failed at the worst possible time, I noticed something: I cared more about <strong>keeping the system alive</strong> than about any single output it produced. Reliability wasn&rsquo;t a task on my list. It was the job.</p>
+        <p class="reveal">So in 2025 I made it official — moved back to Ahmedabad, went all-in on ML infrastructure, and started shipping in public. Small releases, tagged versions, automated checks, honest READMEs. I&rsquo;m learning Go because the entire cloud-native stack — Docker, Kubernetes, Prometheus, Terraform — speaks it. The goal is simple: be the engineer teams trust with production ML.</p>
+      </div>
+      <div class="aside reveal">
+        <div class="term">
+          <div class="term-bar"><i></i><i></i><i></i><span>how-i-work.md</span></div>
+          <div class="term-body">
+            <div><span class="t-g">✓</span> ship small, tag everything</div>
+            <div><span class="t-g">✓</span> automate the boring checks</div>
+            <div><span class="t-g">✓</span> write the runbook before the incident</div>
+            <div><span class="t-g">✓</span> measure before optimizing</div>
+            <div><span class="t-a">→</span> currently: Go, Terraform, GCP</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="experience" style="background:var(--paper-2)">
+  <div class="wrap">
+    <div class="eyebrow reveal"><span class="dot g"></span>EXPERIENCE &amp; EDUCATION</div>
+    <div class="xp reveal">
+      <div class="xp-head">
+        <h3>TD Insurance</h3>
+        <span class="xp-meta">Sep 2022 – Jul 2025 · Markham, Canada</span>
+      </div>
+      <div class="xp-role">Insurance Operations Officer · Acting Team Lead — promoted from contract role within 6 months</div>
+      <ul>
+        <li><b>Designed and specified the Underwriting Error Automation System</b> (Blue Prism) — completion rate 45% → 90%, per-file processing 15–20 min → 2–5 min, <b>$60K saved annually</b>.</li>
+        <li><b>Specified and validated the file-onboarding automation</b> — cut manual processing time by 75% and improved downstream reporting accuracy.</li>
+        <li><b>Owned the production lifecycle</b> — requirements, UAT, post-deployment monitoring and error analysis for every automation release, in daily partnership with developers and BAs.</li>
+        <li><b>Led as interim team lead</b> — mentored teammates, balanced workloads, and held SLA compliance across underwriting operations.</li>
+      </ul>
+      <div class="awards">
+        <span class="award">★ Legendary Award — TD&rsquo;s highest honor</span>
+        <span class="award">Above &amp; Beyond Award</span>
+        <span class="award">Great Work Award</span>
+      </div>
+    </div>
+    <div class="edu">
+      <div class="reveal"><b>M.Sc. Data Analytics</b><span>Trent University, Canada · 2021–2022</span></div>
+      <div class="reveal"><b>M.Sc. Big Data Analytics</b><span>St. Xavier&rsquo;s College, Ahmedabad · 2017–2019</span></div>
+      <div class="reveal"><b>B.Sc. Statistics</b><span>St. Xavier&rsquo;s College, Ahmedabad · 2014–2017</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="stack">
+  <div class="wrap">
+    <div class="eyebrow reveal"><span class="dot g"></span>STACK — HONEST INVENTORY</div>
+    <h2 class="reveal">What I use, what I&rsquo;m building with, what&rsquo;s next.</h2>
+    <div class="legend reveal" style="margin-top:30px">
+      <span><span class="dot g"></span>daily drivers</span>
+      <span><span class="dot a"></span>building with now</span>
+      <span><span class="dot o"></span>next up</span>
+    </div>
+    <div class="skill-group reveal">
+      <h4>ML &amp; pipelines</h4>
+      <div class="chips">
+        <span class="chip"><span class="dot g"></span>Python</span>
+        <span class="chip"><span class="dot g"></span>scikit-learn</span>
+        <span class="chip"><span class="dot g"></span>PyTorch</span>
+        <span class="chip"><span class="dot g"></span>Pandas</span>
+        <span class="chip"><span class="dot g"></span>Pandera</span>
+        <span class="chip"><span class="dot g"></span>SQL · PostgreSQL</span>
+      </div>
+    </div>
+    <div class="skill-group reveal">
+      <h4>MLOps &amp; infrastructure</h4>
+      <div class="chips">
+        <span class="chip"><span class="dot g"></span>Docker</span>
+        <span class="chip"><span class="dot g"></span>MLflow</span>
+        <span class="chip"><span class="dot g"></span>DVC</span>
+        <span class="chip"><span class="dot g"></span>Git · GitHub Actions</span>
+        <span class="chip building"><span class="dot a"></span>Go</span>
+        <span class="chip building"><span class="dot a"></span>Terraform</span>
+        <span class="chip building"><span class="dot a"></span>GCP · Cloud Run · GCS</span>
+        <span class="chip building"><span class="dot a"></span>Prometheus · Grafana</span>
+        <span class="chip building"><span class="dot a"></span>Evidently</span>
+        <span class="chip planned"><span class="dot o"></span>Kubernetes</span>
+      </div>
+    </div>
+    <div class="skill-group reveal">
+      <h4>LLM &amp; retrieval</h4>
+      <div class="chips">
+        <span class="chip"><span class="dot g"></span>FAISS</span>
+        <span class="chip"><span class="dot g"></span>Sentence Transformers</span>
+        <span class="chip"><span class="dot g"></span>Ollama · Mistral 7B</span>
+        <span class="chip"><span class="dot g"></span>LangChain</span>
+        <span class="chip"><span class="dot g"></span>ChromaDB</span>
+        <span class="chip building"><span class="dot a"></span>Langfuse · RAGAS</span>
+      </div>
+    </div>
+    <div class="skill-group reveal">
+      <h4>From the operations years</h4>
+      <div class="chips">
+        <span class="chip"><span class="dot g"></span>Blue Prism RPA</span>
+        <span class="chip"><span class="dot g"></span>UAT &amp; QA</span>
+        <span class="chip"><span class="dot g"></span>Process mapping</span>
+        <span class="chip"><span class="dot g"></span>SOPs &amp; runbooks</span>
+        <span class="chip"><span class="dot g"></span>Stakeholder wrangling</span>
+        <span class="chip"><span class="dot g"></span>Tableau · Advanced Excel</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="contact">
+  <div class="wrap">
+    <div class="contact reveal">
+      <div class="eyebrow" style="margin-bottom:22px"><span class="dot g live"></span>STATUS: AVAILABLE</div>
+      <h2>Need someone who treats <em>uptime</em> like it&rsquo;s personal?</h2>
+      <p>I reply fast, I show my work, and I&rsquo;m happiest where production meets ML. Based in Ahmedabad, India (IST) — open to remote and relocation.</p>
+      <div class="cta-row" style="justify-content:center;margin-bottom:0">
+        <a class="btn solid" href="mailto:malavmjoshi@gmail.com">malavmjoshi@gmail.com</a>
+        <a class="btn ghost" href="https://github.com/5Malav" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn ghost" href="https://linkedin.com/in/malavjoshi5" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+      <div class="contact-meta">UTC +05:30 · USUALLY RESPONDS WITHIN HOURS, NOT DAYS</div>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <span>© <span id="yr">2026</span> Malav Joshi · built from scratch, no template</span>
+  <span>IBM Plex · Three.js · one HTML file</span>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  document.getElementById("yr").textContent = new Date().getFullYear();
+
+  // ---------- scroll reveals ----------
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var revealEls = document.querySelectorAll(".reveal");
+  if (reduce || !("IntersectionObserver" in window)) {
+    revealEls.forEach(function(el){ el.classList.add("in"); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    revealEls.forEach(function(el){ io.observe(el); });
+  }
+
+  // ---------- the living system (hero 3D) ----------
+  var wrap = document.getElementById("hero3d");
+  if (!wrap || typeof THREE === "undefined") return;
+
+  var renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  } catch (err) { wrap.remove(); return; }
+
+  var W = wrap.clientWidth, H = wrap.clientHeight;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(W, H);
+  wrap.appendChild(renderer.domElement);
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 500);
+  camera.position.set(0, 0, 98);
+
+  var group = new THREE.Group();
+  scene.add(group);
+  // shift the system toward the right side on wide screens
+  var isNarrow = window.innerWidth < 960;
+  group.position.x = isNarrow ? 0 : 26;
+
+  // --- nodes ---
+  var N = isNarrow ? 70 : 115;
+  var nodes = [];
+  for (var i = 0; i < N; i++) {
+    // ellipsoid cloud, denser toward the core
+    var r = Math.pow(Math.random(), 0.62);
+    var th = Math.random() * Math.PI * 2;
+    var ph = Math.acos(2 * Math.random() - 1);
+    nodes.push(new THREE.Vector3(
+      r * 52 * Math.sin(ph) * Math.cos(th),
+      r * 34 * Math.sin(ph) * Math.sin(th),
+      r * 30 * Math.cos(ph)
+    ));
+  }
+  var pos = new Float32Array(N * 3);
+  nodes.forEach(function(v, idx){ pos[idx*3]=v.x; pos[idx*3+1]=v.y; pos[idx*3+2]=v.z; });
+  var pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  var points = new THREE.Points(pGeo, new THREE.PointsMaterial({
+    color: 0x24304D, size: 2.3, sizeAttenuation: true, transparent: true, opacity: 0.9
+  }));
+  group.add(points);
+
+  // --- edges (connect close pairs) ---
+  var edges = [];
+  var linePos = [];
+  var MAXD = 19;
+  for (var a = 0; a < N; a++) {
+    for (var b = a + 1; b < N; b++) {
+      if (nodes[a].distanceTo(nodes[b]) < MAXD) {
+        edges.push([nodes[a], nodes[b]]);
+        linePos.push(nodes[a].x, nodes[a].y, nodes[a].z, nodes[b].x, nodes[b].y, nodes[b].z);
+      }
+    }
+  }
+  var lGeo = new THREE.BufferGeometry();
+  lGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(linePos), 3));
+  var lines = new THREE.LineSegments(lGeo, new THREE.LineBasicMaterial({
+    color: 0x8B94A8, transparent: true, opacity: 0.16
+  }));
+  group.add(lines);
+
+  // --- pulses: green packets traveling the edges (the system is alive) ---
+  var pulses = [];
+  var PULSES = edges.length ? (isNarrow ? 5 : 8) : 0;
+  for (var p = 0; p < PULSES; p++) {
+    var mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.75, 8, 8),
+      new THREE.MeshBasicMaterial({ color: p % 4 === 3 ? 0xC07A2E : 0x27B873 })
+    );
+    group.add(mesh);
+    pulses.push({
+      mesh: mesh,
+      edge: edges[(Math.random() * edges.length) | 0],
+      t: Math.random(),
+      sp: 0.004 + Math.random() * 0.007
+    });
+  }
+
+  // --- interaction state ---
+  var mx = 0, my = 0;
+  window.addEventListener("pointermove", function(e){
+    mx = (e.clientX / window.innerWidth) * 2 - 1;
+    my = (e.clientY / window.innerHeight) * 2 - 1;
+  }, { passive: true });
+
+  var playing = true;
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function(entries){
+      playing = entries[0].isIntersecting;
+    }, { threshold: 0.02 }).observe(wrap);
+  }
+
+  function resize(){
+    W = wrap.clientWidth; H = wrap.clientHeight;
+    camera.aspect = W / H;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+    isNarrow = window.innerWidth < 960;
+    group.position.x = isNarrow ? 0 : 26;
+  }
+  window.addEventListener("resize", resize);
+
+  if (reduce) { renderer.render(scene, camera); return; } // one calm frame, no motion
+
+  var tmp = new THREE.Vector3();
+  function tick(){
+    requestAnimationFrame(tick);
+    if (!playing) return;
+
+    group.rotation.y += 0.0011;
+    group.rotation.x += (my * 0.10 - group.rotation.x) * 0.04;
+    camera.position.x += (mx * 5 - camera.position.x) * 0.04;
+    camera.position.y += (-my * 3 - camera.position.y) * 0.04;
+    camera.lookAt(group.position.x, 0, 0);
+
+    for (var i = 0; i < pulses.length; i++) {
+      var pu = pulses[i];
+      pu.t += pu.sp;
+      if (pu.t >= 1) {
+        pu.t = 0;
+        pu.edge = edges[(Math.random() * edges.length) | 0];
+        pu.sp = 0.004 + Math.random() * 0.007;
+      }
+      tmp.lerpVectors(pu.edge[0], pu.edge[1], pu.t);
+      pu.mesh.position.copy(tmp);
+      var s = 0.65 + Math.sin(pu.t * Math.PI) * 0.55;
+      pu.mesh.scale.setScalar(s);
+    }
+    renderer.render(scene, camera);
+  }
+  tick();
+})();
+</script>
+</body>
+</html>
